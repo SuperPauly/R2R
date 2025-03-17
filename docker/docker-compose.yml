@@ -3,8 +3,11 @@ volumes:
     name: postgres_data
 
 networks:
-  firecrawl_firecrawl:
+  docker_firecrawl:
     external: true
+  r2r:
+    driver: internal
+
 
 services:
   postgres:
@@ -15,7 +18,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -25,6 +28,8 @@ services:
     command: >
       postgres
       -c max_connections=1024
+    networks:
+      - r2r
 
   graph_clustering:
     image: ragtoriches/cluster-prod
@@ -35,6 +40,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - r2r
 
   r2r:
     image: r2r:v1
@@ -53,7 +60,8 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
     networks:
-      - firecrawl_firecrawl
+      - docker_firecrawl
+      - r2r
 
   r2r-dashboard:
     image: sciphiai/r2r-dashboard:1.0.2
@@ -61,3 +69,5 @@ services:
       - ./env/r2r-dashboard.env
     ports:
       - "7273:3000"
+    networks:
+      - r2r

@@ -15,6 +15,7 @@ requires-python = ">=3.10"
 dependencies = [
     "icecream>=2.1.4",
     "loguru>=0.7.3",
+    "pre-commit>=4.2.0",
     "r2r>=3.5.9",
 ]
 

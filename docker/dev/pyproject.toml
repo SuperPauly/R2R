@@ -1,0 +1,23 @@
+# R2R/docker/dev/pyproject.toml
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "devr2r-tool" # Give it a unique name
+version = "0.1.0"
+description = "Development Docker helper script for R2R"
+authors = [
+    { name = "Person", email = "your.email@example.com" },
+]
+requires-python = ">=3.10"
+dependencies = [
+    "icecream>=2.1.4",
+    "loguru>=0.7.3",
+    "r2r>=3.5.9",
+]
+
+# This section creates the `uvx` command after installation
+[project.scripts]
+uvx = "devr2r:main" # Assumes devr2r.py has a main() function

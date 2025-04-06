@@ -46,6 +46,9 @@ go.work.sum
 
 .gitignore
 docker/env/*
+docker/dev/.venv
+docker/dev/uv.lock
+docker/dev/devr2r_tool.egg-info
 
 py/poetry.lock
 py/uv.lock

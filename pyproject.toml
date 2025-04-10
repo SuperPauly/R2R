@@ -1,0 +1,12 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# [project]
+# name = "r2r-workspace"
+# version = "0.0.1"
+
+# --- Key Section ---
+[tool.hatch.envs.py-project] # Name the environment (e.g., 'py-project')
+# Tell Hatch that this environment belongs to the project located in the 'py' subdirectory
+project = "py"

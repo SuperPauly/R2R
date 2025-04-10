@@ -13,11 +13,11 @@ default_max_collections_per_user = 5
 # Maximum upload size in bytes (default: 2000000 ~2MB)
 default_max_upload_size = 2000000
 # LLM used for user‐facing output (quality)
-quality_llm = ""
+quality_llm = "openai/gpt-4o"
 # LLM used for fast internal operations
-fast_llm = ""
+fast_llm = "openai/gpt-4o-mini"
 # LLM used for visual inputs
-vlm = ""
+vlm = "openai/gpt-4o-mini"
 # LLM used for audio transcription
 audio_lm = ""
 # A mapping from file extension to maximum upload size
@@ -87,7 +87,7 @@ default_admin_password = "change_me_immediately"
 [completion]
 provider = "r2r"
 # Maximum number of concurrent requests allowed
-concurrent_request_limit = 256
+concurrent_request_limit = 32
 
   [completion.generation_config]
   # Generation parameters
@@ -111,10 +111,10 @@ provider = "bcrypt"
 provider = "postgres"
 user = "postgres"
 password = "postgres"
-host = "localhost"
+host = "postgres"
 port = 5432
-db_name = ""
-project_name = ""
+db_name = "postgres"
+project_name = "r2r"
 default_collection_name = "Default"
 default_collection_description = "Your default collection."
 collection_summary_system_prompt = "system"
@@ -131,18 +131,18 @@ kg_store_path = ""
     effective_cache_size = 524288
     huge_pages = "try"
     maintenance_work_mem = 65536
-    max_connections = 256
+    max_connections = 128
     max_parallel_workers_per_gather = 2
-    max_parallel_workers = 8
+    max_parallel_workers = 2
     max_parallel_maintenance_workers = 2
     max_wal_size = 1024
-    max_worker_processes = 8
+    max_worker_processes = 2
     min_wal_size = 80
     shared_buffers = 16384
     statement_cache_size = 100
     random_page_cost = 4.0
     wal_buffers = 512
-    work_mem = 4096
+    work_mem = 8192
 
   # Graph creation settings
   [database.graph_creation_settings]
@@ -159,6 +159,7 @@ kg_store_path = ""
   # (Optional) Graph search settings – add fields as needed
   [database.graph_search_settings]
     # e.g., search_mode = "default"
+    search_mode = "default"
 
   # Rate limiting settings
   [database.limits]
@@ -187,9 +188,9 @@ rerank_url = ""
 batch_size = 1
 prefixes = {}   # Provide prefix overrides here if needed
 add_title_as_prefix = true
-concurrent_request_limit = 256
+concurrent_request_limit = 8
 max_retries = 3
-initial_backoff = 1.0
+initial_backoff = 2.5
 max_backoff = 64.0
 # Deprecated fields (if still used)
 rerank_dimension = 0
@@ -210,7 +211,7 @@ base_model = "openai/text-embedding-3-small"
 base_dimension = 512
 batch_size = 1
 add_title_as_prefix = true
-concurrent_request_limit = 256
+concurrent_request_limit = 8
 
 ################################################################################
 # File Storage Settings
@@ -242,7 +243,7 @@ parser_overrides = {}
   # Chunk enrichment settings
   [ingestion.chunk_enrichment_settings]
     chunk_enrichment_prompt = "chunk_enrichment"
-    enable_chunk_enrichment = false
+    enable_chunk_enrichment = true
     n_chunks = 2
 
   # Extra parsers (mapping from file type to parser name)

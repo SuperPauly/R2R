@@ -4,6 +4,7 @@ js/tests/*
 
 .env
 .gitignore
+.github/
 *.log
 .DS_Store
 *.gguf
@@ -44,7 +45,6 @@ go.work.sum
 *.egg-info
 .venv
 
-.gitignore
 docker/env/*
 docker/dev/.venv
 docker/dev/uv.lock

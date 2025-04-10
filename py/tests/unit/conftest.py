@@ -18,10 +18,11 @@ from core.providers.database.postgres import (
 from core.providers.database.users import (  # Make sure this import is correct
     PostgresUserHandler, )
 
-TEST_DB_CONNECTION_STRING = os.environ.get(
-    "TEST_DB_CONNECTION_STRING",
-    "postgresql://postgres:postgres@localhost:5432/test_db",
-)
+# TODO: This was giving me errors. Line 31 DatabaseConfig() should use this though.
+# TEST_DB_CONNECTION_STRING = os.environ.get(
+#     "TEST_DB_CONNECTION_STRING",
+#     "postgresql://postgres:postgres@localhost:5432/test_db",
+# )
 
 
 @pytest.fixture
@@ -30,16 +31,23 @@ async def db_provider():
     db_config = DatabaseConfig(
         app=AppConfig(project_name="test_project"),
         provider="postgres",
-        connection_string=TEST_DB_CONNECTION_STRING,
+        host="localhost",
+        port=5432,
+        database="postgres",
+        user="postgres",
+        password="postgres",
+        db_name="postgres",
         postgres_configuration_settings={
             "max_connections": 10,
             "statement_cache_size": 100,
         },
         project_name="test_project",
+        # connection_string=TEST_DB_CONNECTION_STRING,
     )
 
     dimension = 4
     quantization_type = VectorQuantizationType.FP32
+    print(f"\nDEBUG: Attempting to connect using: {db_config}\n")
 
     db_provider = PostgresDatabaseProvider(db_config, dimension,
                                            crypto_provider, quantization_type)

@@ -70,7 +70,7 @@ def check_if_services_running(compose_file_path):
         return False # Assume not running on unexpected error
 
 
-def docker_up():
+def docker_up(build: bool=False):
     """Start the Docker Compose services."""
     print("Starting Docker services...")
 
@@ -78,7 +78,11 @@ def docker_up():
     print(f"  Compose file: {compose_file}")
     print(f"  Dockerfile: {dockerfile}") # Informational
 
-    command = ["docker", "compose", "-f", str(compose_file), "--profile", "postgres", "up", "-d", "--build"]
+    if build == True:
+        command = ["docker", "compose", "-f", str(compose_file), "--profile", "postgres", "up", "-d", "--build"]
+    else:
+        command = ["docker", "compose", "-f", str(compose_file), "--profile", "postgres", "up", "-d"]
+
     # Stream output for build process visibility
     result = _run_command(command, check=False, cwd=str(docker_dir), stream_output=True)
 
@@ -305,8 +309,8 @@ def delete_all_non_superusers():
         logger.error(f"Could not delete {len(errors)} users: {', '.join(errors)}")
 
 
-def up_command():
-    docker_up()
+def up_command(build: bool = False):
+    docker_up(build)
 
 def down_command():
     docker_down()
@@ -354,7 +358,7 @@ def main():
     logger.add(
         sys.stderr,
         level="DEBUG",
-        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan>\n<level>{message}</level>\n",
         colorize=True
     )
 
@@ -369,8 +373,10 @@ def main():
     parser = argparse.ArgumentParser(description="R2R Development Tool (uvx)")
     subparsers = parser.add_subparsers(dest="command", help="Available commands", required=True)
 
+    up_parser = subparsers.add_parser("up", help="Start Docker services (docker compose up)")
+    up_parser.add_argument(["--build", "-b"], action="store_true", default=False, help="Build R2R Dockerfile before starting services")
+
     # Add subparsers for each command
-    subparsers.add_parser("up", help="Start Docker services (docker compose up)")
     subparsers.add_parser("down", help="Stop Docker services (docker compose down)")
     subparsers.add_parser("logs", help="Follow Docker logs (docker compose logs --follow)")
     subparsers.add_parser("ps", help="List running services (docker compose ps)")
@@ -392,7 +398,7 @@ def main():
     args = parser.parse_args()
 
     if args.command == "up":
-        up_command()
+        up_command(args.build)
     elif args.command == "down":
         down_command()
     elif args.command == "logs":

@@ -4,3 +4,10 @@ Debug this error:
 
  Look into the UUID collection_ids issue:
      ERROR - Error during assigning document to collection: invalid input for query argument $2: '01aeaf06-9885-4b86-90c6-c07a35c48356' (a sized iterable container expected (got type 'str'))
+
+
+
+Files in the DB don't delete when you remove the Documents on the WebUI:
+    Search below in psql:
+
+        select * from r2r_default.files;

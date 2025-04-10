@@ -1,7 +1,16 @@
+import logging
 import os
 from pathlib import Path, PurePath
+from uuid import UUID
 
+from r2r import R2RClient
 from shared.abstractions import DocumentType
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 
 def scan_directory(
@@ -128,25 +137,123 @@ def scan_directory(
         return matched_files
 
 
+def insert_files_into_r2r(
+    client: R2RClient,
+    file_paths: list[str],
+    metadata: dict,
+    collection_id: list[str | UUID],
+    collection_name: str = "default",
+    create_new_collection: bool = False,
+    collection_description: str = "",
+    login_email: str = "",
+    login_password: str = "",
+    extract_document: bool = False,
+    ingestion_mode: str = "fast",
+):
+    """
+    Inserts files into R2R using the R2RClient.
+
+    Args:
+        client: R2RClient instance.
+        file_paths: List of file paths to insert.
+        collection_id: Existing collection ID (optional).
+        create_new_collection: Create a new collection if True (optional).
+        login_email: Str of the 'email' for login (optional).
+        login_password: StrUUID of the 'password' for login (optional).
+        extract_document: Extract entities and relationships after insertion if True (optional).
+        extraction_document: Mode for extraction, either "fast" or "hi-res" (optional).
+        metadata: Metadata to attach to the document (optional).
+    """
+
+    if login_email and login_password:
+        try:
+            login_response = client.users.login(login_email, login_password)
+            logger.info(f"Login successful for user: {login_email}")
+        except Exception as e:
+            logger.error(f"Login failed: {e}")
+            return
+
+    if create_new_collection and collection_name is not None:
+        try:
+            create_collection_response = client.collections.create(
+                name=collection_name, description=collection_description
+            )
+            cNoneollection_id = create_collection_response.results.id
+            logger.info(f"New collection created with ID: {collection_id}")
+        except Exception as e:
+            logger.error(f"Failed to create new collection: {e}")
+            return
+
+    if not collection_id:
+        logger.warning(
+            "No collection ID provided.  Files will be added to the default collection."
+        )
+    for file_path in file_paths:
+        file_name = os.path.basename(file_path)
+        # Search for the document by name
+        try:
+            metadata["file_path"] = file_path
+            search_response = client.retrieval.search(
+                query=file_name,
+                search_settings={
+                    "use_semantic_search": False,
+                    "use_fulltext_search": True,
+                    "filters": {"collection_id": {"$eq": collection_id}}
+                    if collection_id
+                    else [],
+                },
+            )
+
+            # Check if any results were found
+            if search_response.results.chunk_search_results != []:
+                logger.info(
+                    f"Document '{file_name}' already exists in R2R. Skipping."
+                )
+                continue  # Skip to the next file
+        except Exception as e:
+            logger.error(f"Error during search for '{file_name}': {e}")
+            continue  # Skip to the next file
+
+        try:
+            ingest_response = client.documents.create(
+                file_path=file_path,
+                collection_ids=collection_id if collection_id else None,
+                metadata=metadata,
+                ingestion_mode=ingestion_mode,
+            )
+            document_id = ingest_response.results.document_id
+            logger.info(
+                f"File '{file_path}' ingested successfully. Document ID: {document_id}"
+            )
+
+            if extract_document:
+                try:
+                    extract_response = client.documents.extract(document_id)
+                    logger.info(
+                        f"Entities and relationships extracted for document ID: {document_id}"
+                    )
+                    logger.info(
+                        f"Extracted entities: {extract_response.results}"
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"Failed to extract entities and relationships for document ID {document_id}: {e}"
+                    )
+
+        except Exception as e:
+            logger.error(f"Failed to ingest file '{file_path}': {e}")
+
+
 if __name__ == "__main__":
-    root_directory = f"{Path.cwd()}"
-    results = scan_directory(
-        root_directory,
+    client = R2RClient("http://localhost:7272")
+    root_directory = f"{Path(__file__).parent.parent.parent}"
+
+    scan_results = scan_directory(root_directory)
+    results = scan_results if scan_results is not None else []
+
+    insert_files_into_r2r(
+        client=client,
+        file_paths=results,
+        collection_id=["ae005dab-b2b1-49cf-bf81-83bb2f3f4feb"],
+        metadata={"source": "local"},
     )
-
-    # client = R2RClient("http://localhost:7272")
-
-    # for file_path in results:
-    #     # Ingest the file
-    #     try:
-    #         ingest_response = client.documents.create(file_path=file_path)
-    #     except Exception as e:
-    #         continue
-
-    #     document_id = ingest_response.results.document_id
-    #     # Extract entities and relationships
-    #     extract_response = client.documents.extract(document_id)
-
-    #     # View extracted knowledge
-    #     # entities = client.documents.list_entities(document_id)
-    #     # relationships = client.documents.list_relationships(document_id)
